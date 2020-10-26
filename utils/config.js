@@ -1,0 +1,9 @@
+module.exports = {
+  PREFIX: "$",
+  EMOJI: {
+    SUPPORT_REACTION: "766012642883666013",
+  },
+  ROLE: {
+    SUPPORT_ROLE: "764849287418478602",
+  },
+};
