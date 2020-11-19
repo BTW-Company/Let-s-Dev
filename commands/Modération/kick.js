@@ -1,24 +1,52 @@
 const { MessageEmbed } = require("discord.js");
 
-module.exports.run = (bot, message, args) => {
+// DB
+const low = require("lowdb");
+const FileSync = require("lowdb/adapters/FileSync");
+const adapter = new FileSync("./db/sanctions.json");
+const db = low(adapter);
+
+module.exports.run = async (bot, message, args) => {
   const user = message.guild.member(message.mentions.users.first());
   const reason = args.splice(1).join(" ") || "Aucune raison spécifié";
   user
-    ? message.guild.member(user).kick(reason)
+    ? await message.guild.member(user) //.kick(reason)
     : message.channel.send("L'utilisateur n'existe pas.");
 
+  // Vérification hiérarchique
+  if (
+    !(message.member.roles.highest.comparePositionTo(user.roles.highest) > 0)
+  ) {
+    const embed = new MessageEmbed()
+      .setTitle("Accès interdit")
+      .setDescription(
+        `● Vous ne pouvez pas utiliser cette commande sur quelqu'un de plus haut gradé que vous`
+      )
+      .setColor("#ff4141")
+      .setTimestamp()
+      .setFooter("Erreur", `${bot.user.avatarURL()}`);
+
+    return message.channel.send(embed);
+  }
+
+  var currentID = await db.get("kick.ID").value();
+
   const embed = new MessageEmbed()
-    .setAuthor(`${user.username} (${user.id})`)
+    .setAuthor(`➔ Kick`)
     .setColor("#ffa500")
-    .setDescription(`**Action**: Kick\n**Raison**: ${reason}`)
+    .setDescription(
+      `**Auteur**: ${message.author.tag} \n **Victime**: ${user.user.tag} (${user.id}) \n **Raison**: ${reason} `
+    )
     .setTimestamp()
-    .setFooter(message.author.username, message.author.avatarURL());
+    .setFooter(`Kick #KI${currentID + 1}`, message.author.avatarURL());
 
   if (user.avatar) {
     embed.setThumbnail(user.user.avatarURL());
   }
 
-  bot.channels.cache.get("722559340933808148").send(embed);
+  await bot.channels.cache.get(bot.config.CHANNELS.MODLOG).send(embed);
+
+  await db.set("kick.ID", currentID + 1).write();
 };
 
 module.exports.config = {
@@ -32,4 +60,5 @@ module.exports.config = {
   group: "Modération - Commandes de modération",
   onlyOwner: false,
   args: true,
+  perm: "kickPerm",
 };

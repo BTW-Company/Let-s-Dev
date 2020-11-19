@@ -1,0 +1,32 @@
+{
+  "mute": {
+    "ID": 2
+  },
+  "ban": {
+    "ID": 16
+  },
+  "kick": {
+    "ID": 5
+  },
+  "prune": {
+    "ID": 1
+  },
+  "purge": {
+    "ID": null
+  },
+  "report": {
+    "ID": 3
+  },
+  "temp-ban": {
+    "ID": 1
+  },
+  "temp-mute": {
+    "ID": null
+  },
+  "unban": {
+    "ID": null
+  },
+  "unmute": {
+    "ID": null
+  }
+}

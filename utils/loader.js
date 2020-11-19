@@ -1,4 +1,5 @@
 const { readdirSync } = require("fs");
+const colors = require("colors");
 
 const loadCommands = (client, dir = "./commands") => {
   readdirSync(dir).forEach((dirs) => {
@@ -9,7 +10,9 @@ const loadCommands = (client, dir = "./commands") => {
     for (const file of commands) {
       const getFileName = require(`../${dir}/${dirs}/${file}`);
       client.commands.set(getFileName.config.name, getFileName);
-      console.log(`Commande chargée: ${getFileName.config.name}`);
+      console.log(
+        colors.cyan(`Commande chargée : `) + `${getFileName.config.name}`
+      );
     }
   });
 };
@@ -24,7 +27,7 @@ const loadEvents = (client, dir = "./events") => {
       const evt = require(`../${dir}/${dirs}/${event}`);
       const evtName = event.split(".")[0];
       client.on(evtName, evt.bind(null, client));
-      console.log(`Evenement chargé: ${evtName}`);
+      console.log(colors.red(`Evenement chargé : `) + `${evtName}`);
     }
   });
 };

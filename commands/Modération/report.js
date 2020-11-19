@@ -1,64 +1,76 @@
 const { MessageEmbed } = require("discord.js");
 
+// DB
+const low = require("lowdb");
+const FileSync = require("lowdb/adapters/FileSync");
+const adapter = new FileSync("./db/sanctions.json");
+const db = low(adapter);
+
 const isFirstCharNumeric = (c) => /\d/.test(c);
 
 module.exports.run = async (bot, message, args) => {
-  const reportChannel = bot.channels.cache.get("723479973863882752");
+  const reportChannel = bot.channels.cache.get(bot.config.CHANNELS.REPORTS);
+  const emojiReport = bot.emojis.cache.get(bot.config.EMOJI.REPORT_REACTION);
+
+  var currentID = await db.get("report.ID").value();
 
   const user = message.mentions.users.first();
-  let reason = args[1];
-
-  const embedNoReason = new MessageEmbed()
-    .setTitle("Une erreur est survenue")
-    .setColor("#b30000")
-    .setDescription("Veuillez spécifier une raison.")
-    .setTimestamp()
-    .setFooter("Erreur", `${bot.user.avatarURL()}`);
 
   if (!args[1]) {
-    return;
-  } else {
-    if (!reason) return message.channel.send(embedNoReason);
+    const noIDEmbed = new MessageEmbed()
+      .setTitle("Une erreur est survenue")
+      .setColor("#ff4141")
+      .setDescription(
+        `● Vous devez mettre l'ID du message \n ● \`${bot.config.PREFIX}report <@user> <id_du_message> <raison> \``
+      )
+      .setTimestamp()
+      .setFooter("Erreur", `${bot.user.avatarURL()}`);
+
+    return message.channel.send(noIDEmbed);
   }
 
+  if (!args[2]) {
+    const noReasonEmbed = new MessageEmbed()
+      .setTitle("Une erreur est survenue")
+      .setColor("#ff4141")
+      .setDescription(
+        `● Vous devez spécifier une raison \n ● \`${bot.config.PREFIX}report <@user> <id_du_message> <raison> \``
+      )
+      .setTimestamp()
+      .setFooter("Erreur", `${bot.user.avatarURL()}`);
+
+    return message.channel.send(noReasonEmbed);
+  } else {
+    var reason = args[1];
+  }
+
+  message.react(emojiReport);
+
   const embed = new MessageEmbed()
-    .setAuthor(message.author.tag)
-    .setThumbnail(user.displayAvatarURL())
-    .addFields(
-      { name: "Reporté", value: user.username, inline: true },
-      {
-        name: "Lien du message",
-        value: isFirstCharNumeric(reason.charAt(0))
-          ? `[Click me](https://discord.com/channels/${message.guild.id}/${message.channel.id}/${args[1]})`
-          : "Aucun lien précisé",
-        inline: true,
-      },
-      {
-        name: "Raison",
-        value: isFirstCharNumeric(reason.charAt(0))
+    .setAuthor(`➔ Report`)
+    .setColor("#00b7c3")
+    .setDescription(
+      `**Auteur**: ${message.author.tag} \n **Victime**: ${user.tag} (${
+        user.id
+      })  \n **Salon**: ${message.channel} \n **Lien du message** : ${
+        isFirstCharNumeric(reason.charAt(0))
+          ? `[Cliquez-moi](https://discord.com/channels/${message.guild.id}/${message.channel.id}/${args[2]})`
+          : "Aucun lien précisé"
+      } \n **Raison** : ${
+        isFirstCharNumeric(reason.charAt(0))
           ? args.slice(args.indexOf(args[2])).join(" ")
-          : args.slice(args.indexOf(args[1])).join(" "),
-        inline: false,
-      }
+          : args.slice(args.indexOf(args[1])).join(" ")
+      }`
     )
-    .setTimestamp();
+    .setTimestamp()
+    .setFooter(`Report #RE${currentID + 1}`, message.author.avatarURL());
 
   if (user.avatar) {
     embed.setThumbnail(user.displayAvatarURL());
   }
 
-  reportChannel.send(embed);
-
-  const embedSuccess = new MessageEmbed()
-    .setTitle("Succès")
-    .setColor("#4a6c40")
-    .setDescription(
-      `Votre report sur l'utilisateur : ${user.tag} a été effectué avec succès.`
-    )
-    .setTimestamp()
-    .setFooter("Succès", `${bot.user.avatarURL()}`);
-
-  message.channel.send(embedSuccess);
+  await reportChannel.send(embed);
+  await db.set("report.ID", currentID + 1).write();
 };
 
 module.exports.config = {
@@ -72,4 +84,5 @@ module.exports.config = {
   group: "Modération - Commandes de modération",
   onlyOwner: false,
   args: true,
+  perm: "",
 };

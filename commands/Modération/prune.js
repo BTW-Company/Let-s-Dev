@@ -1,9 +1,17 @@
 const { MessageEmbed } = require("discord.js");
 
+// DB
+const low = require("lowdb");
+const FileSync = require("lowdb/adapters/FileSync");
+const adapter = new FileSync("./db/sanctions.json");
+const db = low(adapter);
+
 module.exports.run = async (bot, message, args) => {
-  let user = message.guild.member(message.mentions.users.first());
+  const user = message.guild.member(message.mentions.users.first());
   if (isNaN(args[1]) || args[1] < 1 || args[1] > 100)
     return message.reply("Il faut spécifier un ***nombre*** entre 1 et 100.");
+
+  var currentID = await db.get("prune.ID").value();
 
   const messages = (
     await message.channel.messages.fetch({
@@ -18,20 +26,23 @@ module.exports.run = async (bot, message, args) => {
 
   if (messages.length === 0 || !user)
     return message.reply(
-      "Aucun message à supprimer sur cet utilisteur __ou__ Cet utilisateur n'existe pas"
+      "Aucun message à supprimer sur cet utilisteur __ou__ cet utilisateur n'existe pas"
     );
 
   if (messages.length === 1) await messages[0].delete;
   else await message.channel.bulkDelete(messages);
 
   const embed = new MessageEmbed()
-    .setAuthor(message.author.username, message.author.avatarURL())
-    .setColor("##dc143c")
+    .setAuthor(`➔ Prune`)
+    .setColor("#dc143c")
     .setDescription(
-      `**Action**: Prune\n**Nbr de messages**: ${args[1]}\n**Utilisateur**: ${args[0]}`
-    );
+      `**Auteur**: ${message.author.tag} \n **Victime**: ${user.user.tag} (${user.id}) \n **Nbr de messages**: ${args[1]} `
+    )
+    .setFooter(`Prune #PR${currentID + 1}`, message.author.avatarURL());
 
-  bot.channels.cache.get("722559340933808148").send(embed);
+  await bot.channels.cache.get(bot.config.CHANNELS.MODLOG).send(embed);
+
+  await db.set("prune.ID", currentID + 1).write();
 };
 
 module.exports.config = {
@@ -46,4 +57,5 @@ module.exports.config = {
   group: "Modération - Commandes de modération",
   onlyOwner: false,
   args: true,
+  perm: "messagePerm",
 };

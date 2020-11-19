@@ -79,6 +79,51 @@ module.exports = async (bot, message) => {
     return message.channel.send(embed);
   }
 
+  // Vérification des permissions
+  const noPermEmbed = new MessageEmbed()
+    .setTitle("Accès interdit")
+    .setDescription(
+      `● Seul les membres autorisés peuvent effectuer cette commande`
+    )
+    .setColor("#ff4141")
+    .setTimestamp()
+    .setFooter("Erreur", `${bot.user.avatarURL()}`);
+
+  switch (command.config.perm) {
+    case "banPerm":
+      if (!message.member.hasPermission("BAN_MEMBERS")) {
+        noPermEmbed.setDescription(
+          `● Seul les membres autorisés peuvent effectuer cette commande \n ● Vous devez posseder la permission \`BAN_MEMBERS\``
+        );
+        return message.channel.send(noPermEmbed);
+      }
+
+    case "kickPerm":
+      if (!message.member.hasPermission("KICK_MEMBERS")) {
+        noPermEmbed.setDescription(
+          `● Seul les membres autorisés peuvent effectuer cette commande \n ● Vous devez posseder la permission \`KICK_MEMBERS\``
+        );
+        return message.channel.send(noPermEmbed);
+      }
+
+    case "mutePerm":
+      if (!message.member.hasPermission("MUTE_MEMBERS")) {
+        noPermEmbed.setDescription(
+          `● Seul les membres autorisés peuvent effectuer cette commande \n ● Vous devez posseder la permission \`MUTE_MEMBERS\``
+        );
+        return message.channel.send(noPermEmbed);
+      }
+
+    case "messagePerm":
+      if (!message.member.hasPermission("MANAGE_MESSAGES")) {
+        noPermEmbed.setDescription(
+          `● Seul les membres autorisés peuvent effectuer cette commande \n ● Vous devez posseder la permission \`MANAGE_MESSAGES\``
+        );
+        return message.channel.send(noPermEmbed);
+      }
+    default:
+  }
+
   // Vérification des arguments
   if (command.config.args && !args.length) {
     const noArgsEmbed = new MessageEmbed()
@@ -89,7 +134,7 @@ module.exports = async (bot, message) => {
 
     if (command.config.usage)
       noArgsEmbed.setDescription(
-        `● Vous devez choisir une option pour utiliser cette commande \n ● \`${prefix}${command.config.name} ${command.config.usage}\``
+        `● Vous devez mettre un/des argument(s) pour utiliser cette commande \n ● \`${prefix}${command.config.name} ${command.config.usage}\``
       );
     return message.channel.send(noArgsEmbed);
   }
