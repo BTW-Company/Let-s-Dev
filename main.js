@@ -9,6 +9,7 @@ const bot = new Client({ partials: ["MESSAGE", "CHANNEL", "REACTION"] });
 
 // Assign to bot
 bot.config = require("./utils/config");
+bot.main = require("./utils/constants");
 
 // Initialisation des collections
 bot.commands = new Collection();

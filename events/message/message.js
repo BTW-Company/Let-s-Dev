@@ -63,9 +63,10 @@ module.exports = async (bot, message) => {
   if (!command) return;
 
   // Vérification owner
+  const ownerListID = ["279351779693428736", "350710888812249101"];
   if (
     command.config.onlyOwner == true &&
-    message.author.id !== ("279351779693428736" || "350710888812249101")
+    !ownerListID.includes(message.author.id)
   ) {
     const embed = new MessageEmbed()
       .setTitle("Accès interdit")
